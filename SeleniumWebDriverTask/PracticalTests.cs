@@ -14,6 +14,9 @@ namespace SeleniumWebDriverTask
     {
         private IConfigRoot _configuration;
         private string baseUrl;
+        private IWebDriver driver;
+        private WebDriverWait wait;
+        private IJavaScriptExecutor js;
 
         [SetUp]
         public void SetUp()
@@ -26,20 +29,31 @@ namespace SeleniumWebDriverTask
             baseUrl = _configuration["Settings:BaseUrl"];
 
             Assert.IsFalse(string.IsNullOrEmpty(baseUrl), "BaseUrl should not be empty in appsettings.json.");
+
+            driver = new ChromeDriver();
+            js = (IJavaScriptExecutor)driver;
+
+            driver.Manage().Window.Maximize();
+
+            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(2);
+
+            wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            driver?.Quit();
+            driver?.Dispose();
         }
 
         [Test]
         [TestCase("All", "Automation")]
-        public void TestNavigationWithJsonConfig(string location, string keyword)
+        public void All_Steps_Test(string location, string keyword)
         {
-            IWebDriver driver = new ChromeDriver();
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
-
-            driver.Manage().Window.Maximize();
 
             //Start page
-            driver.Url = @"https://www.epam.com/";
+            driver.Url = baseUrl;
 
             //Cookie button click
             var acceptCookieButton = wait.Until(d =>
@@ -48,18 +62,6 @@ namespace SeleniumWebDriverTask
             Thread.Sleep(50);
             acceptCookieButton.Click();
 
-            //var acceptCookieButton = wait.Until(d =>
-            //{
-            //    try
-            //    {
-            //        var element = d.FindElement(By.Id("onetrust-accept-btn-handler"));
-            //        return (element.Displayed && element.Enabled) ? element : null;
-            //    }
-            //    catch (NoSuchElementException)
-            //    {
-            //        return null;
-            //    }
-            //});
             //js.ExecuteScript("arguments[0].click();", acceptCookieButton);
 
             //Go to careers page
@@ -73,6 +75,7 @@ namespace SeleniumWebDriverTask
             //Accept cookie
             var acceptCookieButton1 = wait.Until(d =>
                 d.FindElement(By.Id("onetrust-accept-btn-handler")));
+            Thread.Sleep(50);
             acceptCookieButton1.Click();
 
             //Choose location
